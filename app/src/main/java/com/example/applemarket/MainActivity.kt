@@ -1,5 +1,6 @@
 package com.example.applemarket
 
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
@@ -18,7 +19,7 @@ import com.example.applemarket.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
     private val binding by lazy { ActivityMainBinding.inflate( layoutInflater ) }
     private lateinit var itemAdapter: ItemListAdapter
-    private lateinit var dataList: List<ItemEntity>
+    private var dataList = arrayListOf<ItemEntity>()
     private lateinit var notice: Notification
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,22 +71,14 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun deleteDialog(list: ItemEntity) : Boolean {
         AlertDialog.Builder(this)
             .setTitle("경고!")
             .setMessage("항목을 삭제 하시겠습니까?")
             .setIcon(R.drawable.baseline_crisis_alert_24)
             .setPositiveButton("Yes") { _, _ ->
-                /*runBlocking {
-                    for(i in dataList.indices) {
-                        if(list.name == dataList[i].name) {
-                            dataList.toMutableList().removeAt(i)
-                            initViews()
-                        } else {
-                            continue
-                        }
-                    }
-                }*/
+                deleteButton(list)
             }
             .setNegativeButton("No") { _, _ ->
 
@@ -95,8 +88,14 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun deleteButton(itemEntity: ItemEntity) {
+        dataList.remove(itemEntity)
+        binding.recyclerView.adapter?.notifyDataSetChanged()
+    }
+
     private fun initViews() {
-        dataList = ItemList().bind()
+        dataList = ItemList().bind() as ArrayList<ItemEntity>
 
         binding.bellButton.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -110,13 +109,14 @@ class MainActivity : AppCompatActivity() {
             notice.deliverNotification()
         }
 
-        itemAdapter = ItemListAdapter(dataList, onClick = {
+        itemAdapter = ItemListAdapter(onClick = {
             val intent = Intent(this, DetailActivity::class.java)
             intent.putExtra(DetailActivity.BLUE_CARD, it)
             startActivity(intent)
         }, onLongClick = {
             deleteDialog(it)
         })
+        itemAdapter.submitList(dataList)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = itemAdapter
     }

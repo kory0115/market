@@ -1,7 +1,8 @@
 package com.example.applemarket
 
 data class SaveEntity(
-    val likeCount: Int,
+    var likeCount: Int,
     val chatCount: Int,
-    val likeStatus: Boolean
+    var likeStatus: Boolean,
+    val key: Int
 )

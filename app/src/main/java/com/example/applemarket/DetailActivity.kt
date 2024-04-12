@@ -9,7 +9,7 @@ import java.text.DecimalFormat
 class DetailActivity: AppCompatActivity() {
     private val binding by lazy { ActivityDetailBinding.inflate( layoutInflater ) }
     private lateinit var data: ItemEntity
-    private var plugin: Boolean = false
+    private var plugin : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

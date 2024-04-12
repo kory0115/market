@@ -1,18 +1,31 @@
 package com.example.applemarket
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.applemarket.databinding.ViewholderMainBinding
 import kotlinx.coroutines.runBlocking
 import java.text.DecimalFormat
 
 class ItemListAdapter(
-    private val dataList: List<ItemEntity>,
     val onClick: (ItemEntity) -> Unit,
     val onLongClick: (ItemEntity) -> Boolean
-): RecyclerView.Adapter<ItemListAdapter.ViewHolder>() {
+): ListAdapter<ItemEntity, ItemListAdapter.ViewHolder>(diffUtil) {
 
+    companion object {
+        val diffUtil = object : DiffUtil.ItemCallback<ItemEntity>() {
+            override fun areItemsTheSame(oldItem: ItemEntity, newItem: ItemEntity): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areContentsTheSame(oldItem: ItemEntity, newItem: ItemEntity): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
 
     inner class ViewHolder(private val binding: ViewholderMainBinding) : RecyclerView.ViewHolder(binding.root){
         fun bind(itemEntity: ItemEntity) {
@@ -39,9 +52,7 @@ class ItemListAdapter(
         return ViewHolder(binding)
     }
 
-    override fun getItemCount() = dataList.size
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(dataList[position])
+        holder.bind(currentList[position])
     }
 }
