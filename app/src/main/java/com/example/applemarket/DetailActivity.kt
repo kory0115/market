@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.applemarket.databinding.ActivityDetailBinding
+import java.text.DecimalFormat
 
 class DetailActivity: AppCompatActivity() {
     private val binding by lazy { ActivityDetailBinding.inflate( layoutInflater ) }
@@ -44,7 +45,7 @@ class DetailActivity: AppCompatActivity() {
 
         binding.addressTextView.text = data.address
         binding.desTextView.setText(data.description)
-        binding.priceTextView.text = data.price //1000단위로 끊는 기능 추가
+        binding.priceTextView.text = data.price
         binding.titleImageView.setImageResource(data.image)
         binding.itemTextView.text = data.name
         binding.nameTextView.text = data.seller

@@ -4,10 +4,13 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.applemarket.databinding.ViewholderMainBinding
+import kotlinx.coroutines.runBlocking
+import java.text.DecimalFormat
 
 class ItemListAdapter(
     private val dataList: List<ItemEntity>,
-    val onClick: (ItemEntity) -> Unit
+    val onClick: (ItemEntity) -> Unit,
+    val onLongClick: (ItemEntity) -> Boolean
 ): RecyclerView.Adapter<ItemListAdapter.ViewHolder>() {
 
 
@@ -20,10 +23,13 @@ class ItemListAdapter(
             binding.priceTextView.text = itemEntity.price
             binding.titleTextView.setText(itemEntity.description)
             binding.subTextView.text = itemEntity.address
-            //price 표현시 1000단위로 끊는 기능 추가
 
             binding.root.setOnClickListener {
                 onClick(itemEntity)
+            }
+
+            binding.root.setOnLongClickListener {
+                onLongClick(itemEntity)
             }
         }
     }
