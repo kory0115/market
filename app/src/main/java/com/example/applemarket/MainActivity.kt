@@ -1,13 +1,19 @@
 package com.example.applemarket
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.view.animation.AlphaAnimation
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
@@ -22,6 +28,29 @@ class MainActivity : AppCompatActivity() {
     private var dataList = arrayListOf<ItemEntity>()
     private lateinit var notice: Notification
 
+    @SuppressLint("NotifyDataSetChanged")
+    private val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            result: ActivityResult ->
+        if(result.resultCode != Activity.RESULT_OK) {
+            return@registerForActivityResult
+        }
+
+        if(result.resultCode == Activity.RESULT_OK) {
+            val stat = result.data?.getBooleanExtra(LIKE_STATUS, false)
+            val pos = result.data?.getIntExtra(POSITION, 0)!!
+            if(stat == true) {
+                dataList[pos - 1].status = true
+                dataList[pos - 1].like += 1
+            } else {
+                dataList[pos - 1].status = false
+                dataList[pos - 1].like -= 1
+            }
+            itemAdapter.notifyDataSetChanged()
+        } else {
+            Toast.makeText(this, "잘못된 접근 입니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -33,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         initViews()
+        bindViews()
         notice = Notification(this)
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             addOnBackPressCallBack()
@@ -90,13 +120,32 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("NotifyDataSetChanged")
     fun deleteButton(itemEntity: ItemEntity) {
+        val position = itemEntity.key
         dataList.remove(itemEntity)
+        for(i in position - 1 until dataList.size) {
+            dataList[i].key = i + 1
+        }
         binding.recyclerView.adapter?.notifyDataSetChanged()
     }
 
     private fun initViews() {
         dataList = ItemList().bind() as ArrayList<ItemEntity>
 
+        itemAdapter = ItemListAdapter(onClick = {
+            val intent = Intent(this, DetailActivity::class.java)
+
+            intent.putExtra(DetailActivity.BLUE_CARD, it)
+            intent.putExtra(DetailActivity.STATUS, it.status)
+            resultLauncher.launch(intent)
+        }, onLongClick = {
+            deleteDialog(it)
+        })
+        itemAdapter.submitList(dataList)
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = itemAdapter
+    }
+
+    private fun bindViews() {
         binding.bellButton.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
@@ -109,15 +158,27 @@ class MainActivity : AppCompatActivity() {
             notice.deliverNotification()
         }
 
-        itemAdapter = ItemListAdapter(onClick = {
-            val intent = Intent(this, DetailActivity::class.java)
-            intent.putExtra(DetailActivity.BLUE_CARD, it)
-            startActivity(intent)
-        }, onLongClick = {
-            deleteDialog(it)
-        })
-        itemAdapter.submitList(dataList)
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = itemAdapter
+        binding.actionButton.setOnClickListener {
+            binding.recyclerView.scrollToPosition(0)
+        }
+
+        binding.recyclerView.setOnScrollChangeListener { view, x, y, ox, oy ->
+            if(y > oy) {
+                val fadeIn = AlphaAnimation(0f, 1f).apply { duration = 300 }
+                binding.actionButton.startAnimation(fadeIn)
+                binding.actionButton.visibility = View.VISIBLE
+            }
+
+            if(y <= oy) {
+                val fadeOut = AlphaAnimation(1f, 0f).apply { duration = 300 }
+                binding.actionButton.startAnimation(fadeOut)
+                binding.actionButton.visibility = View.GONE
+            }
+        }
+    }
+
+    companion object {
+        const val LIKE_STATUS = "like_status"
+        const val POSITION = "position"
     }
 }

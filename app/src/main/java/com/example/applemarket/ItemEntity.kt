@@ -13,5 +13,6 @@ data class ItemEntity(
     var like: Int,
     var chat: Int,
     val image: Int,
-    val key: Int
+    var key: Int,
+    var status: Boolean
 ) : Parcelable
